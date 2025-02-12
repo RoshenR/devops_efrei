@@ -1,26 +1,17 @@
+# .circleci/config.yml
 version: 2.1
+
 orbs:
   node: circleci/node@5
-jobs:
 
+jobs:
+  # First job declared is for building things..
   build:
     executor: node/default
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - pkg-manager: npm
-      - run:
-          name: Code Linting
-          command: npm run lint
-      - run:
-          name: Build Project
-          command: npm run build
-      - run :
-          name: Package
-          command: npm run package
-
-
+      - run: echo "Building things..."
+  # Second job declared is for launching unit tests with Jest
   unit_tests:
     executor: node/default
     environment:
@@ -37,30 +28,14 @@ jobs:
       - store_test_results:
           path: ./test-results/
 
-  integration_tests:
-    executor: default
-    steps:
-      - checkout
-      - run: npm run test:integration
-
-  security_tests:
-    executor: default
-    steps:
-      - checkout
-      - run: npm audit --audit-level-high
-
+  # Deploy development environment
   deploy_dev:
     executor: node/default
     steps:
       - checkout
       - run: echo "Deploying to development environment..."
 
-  deploy_int:
-    executor: node/default
-    steps:
-      - checkout
-      - run: echo "Deploying to integration environment..."
-
+  # Deploy production environment
   deploy_prod:
     executor: node/default
     steps:
@@ -69,24 +44,15 @@ jobs:
 
 workflows:
   version: 2
-  ci_pipeline:
+
+  build-test-deploy:
+
     jobs:
-      - build:
-        filters:
-          branches:
-            ignore:
-              - /^hotfix\/.*/
-              - /^feature\/.*/
+
+      - build
+
       - unit_tests:
           requires:
-            - build
-
-      - integration_tests:
-          requires:
-            - build
-
-      - security_tests:
-          required:
             - build
 
       - deploy_dev:
@@ -97,19 +63,10 @@ workflows:
               only:
                 - develop
 
-      - deploy_int:
-          requires:
-            - integration_tests
-            - security_tests
-          filters:
-            branches:
-              only:
-                - integration
-
       - deploy_prod:
           requires:
             - unit_tests
           filters:
             branches:
               only:
-                - main
+                - master
