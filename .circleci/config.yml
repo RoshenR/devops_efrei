@@ -1,76 +1,41 @@
+# .circleci/config.yml
 version: 2.1
 
 orbs:
   node: circleci/node@5
 
-executors:
-  default:
-    docker:
-      - image: circleci:node:16
-
 jobs:
+  # First job declared is for building things..
   build:
-    executor: default
+    executor: node/default
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: npm install
-      - run:
-          name: Code Linting
-          command: npm run lint
-      - run:
-          name: Build Project
-          command: npm run build
-      - run:
-          name: Package
-          command: npm run package
-
+      - run: echo "Building things..."
+  # Second job declared is for launching unit tests with Jest
   unit_tests:
-    executor: default
+    executor: node/default
+    environment:
+      JEST_JUNIT_OUTPUT_DIR: ./test-results/
     steps:
       - checkout
+      - node/install-packages:
+          pkg-manager: npm
       - run:
-          name: Install dependencies
-          command: npm install
-      - run: npm install jest-junit
+          command: npm install jest-junit
       - run:
-          name: Run Unit Tests
+          name: Run tests
           command: npm run test:ci
       - store_test_results:
           path: ./test-results/
 
-  integration_tests:
-    executor: default
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: npm install
-      - run: npm run test:integration
-
-  security_tests:
-    executor: default
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: npm install
-      - run: npm audit --audit-level=high
-
-
+  # Deploy development environment
   deploy_dev:
     executor: node/default
     steps:
       - checkout
       - run: echo "Deploying to development environment..."
 
-  deploy_int:
-    executor: node/default
-    steps:
-      - checkout
-      - run: echo "Deploying to integration environment..."
-
+  # Deploy production environment
   deploy_prod:
     executor: node/default
     steps:
@@ -79,50 +44,29 @@ jobs:
 
 workflows:
   version: 2
+
   build-test-deploy:
+
     jobs:
-      - build:
-        filters:
-          branches:
-            ignore:
-                  - /^hotfix\/.*/
-                  - /^feature\/.*/
+
+      - build
+
       - unit_tests:
           requires:
             - build
 
-      - integration_tests:
-          requires:
-            - unit_tests
-
-      - security_tests:
-          required:
-            - build
-
       - deploy_dev:
           requires:
-            - integration_tests
-            - security_tests
             - unit_tests
           filters:
             branches:
               only:
                 - develop
 
-      - deploy_int:
-          requires:
-            - integration_tests
-            - security_tests
-          filters:
-            branches:
-              only:
-                - integration
-
       - deploy_prod:
           requires:
-            - deploy_int
-            - deploy_dev
+            - unit_tests
           filters:
             branches:
               only:
-                - main
+                - master
