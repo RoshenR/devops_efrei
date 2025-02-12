@@ -5,19 +5,19 @@ orbs:
   node: circleci/node@5
 
 jobs:
-  # First job declared is for building things..
+  # Build job
   build:
     executor: node/default
     steps:
       - checkout
-      - run: echo "Installing Dependencies.."
       - run: echo "Installing dependencies..."
-#      - run: npm install
+      - run: npm install
       - run: echo "Running code analysis..."
-#      - run: npm run lint
+      - run: npm run lint
       - run: echo "Cleaning and packaging..."
-#      - run: npm run build
-  # Second job declared is for launching unit tests with Jest
+      - run: npm run build
+
+  # Unit tests job
   unit_tests:
     executor: node/default
     environment:
@@ -35,41 +35,33 @@ jobs:
       - store_test_results:
           path: ./test-results/
 
-
+  # Integration tests job
   integration_tests:
     executor: node/default
     steps:
       - checkout
-      - run: echo "Installing dependencies for integration tests.."
-#      - run: npm install
+      - run: echo "Installing dependencies for integration tests..."
+      - run: npm install
       - run: echo "Running integration tests..."
+      - run: npm run test:integration
 
+  # Security tests job
+  security_tests:
+    executor: node/default
+    steps:
+      - checkout
+      - run: echo "Installing dependencies for security tests..."
+      - run: npm install
+      - run: echo "Running security tests..."
+      - run: npm audit --audit-level=high
+
+  # Performance tests job
   performance_tests:
     executor: node/default
     steps:
       - checkout
       - run: echo "Running performance tests..."
-
-  compatibility_tests:
-    executor: node/default
-    steps:
-      - checkout
-      - run: echo "Running compatibility tests..."
-
-    accessibility_tests:
-      executor: node/default
-      steps:
-        - checkout
-        - run: echo "Running accessibility tests..."
-
-  security_tests:
-    executor: node/default
-    steps:
-      - checkout
-      - run: echo "Installing dependencies for security tests.."
-#      - run: npm install
-      - run: echo "Running Security Tests..."
-
+      - run: npm run test:performance
 
   # Deploy development environment
   deploy_dev:
@@ -81,6 +73,7 @@ jobs:
       - run: echo "Running verification tests..."
       - run: echo "Monitoring development deployment..."
 
+  # Deploy integration environment
   deploy_int:
     executor: node/default
     steps:
@@ -129,19 +122,9 @@ workflows:
           requires:
             - integration_tests
 
-      - compatibility_tests:
-          requires:
-            - integration_tests
-
-      - accessibility_tests:
-          requires:
-            - integration_tests
-
       - deploy_dev:
           requires:
             - performance_tests
-            - compatibility_tests
-            - accessibility_tests
           filters:
             branches:
               only: develop
@@ -158,4 +141,4 @@ workflows:
             - deploy_int
           filters:
             branches:
-              only: master
+              only: main
