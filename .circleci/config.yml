@@ -81,6 +81,14 @@ workflows:
           requires:
             - build
 
+      - integration_tests:
+          requires:
+            - build
+
+      - security_tests:
+          required:
+            - build
+
       - deploy_dev:
           requires:
             - unit_tests
@@ -88,6 +96,15 @@ workflows:
             branches:
               only:
                 - develop
+
+      - deploy_int:
+          requires:
+            - integration_tests
+            - security_tests
+          filters:
+            branches:
+              only:
+                - integration
 
       - deploy_prod:
           requires:
