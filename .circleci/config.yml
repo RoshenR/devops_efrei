@@ -95,17 +95,13 @@ workflows:
 
       - deploy_dev:
           requires:
-            - unit_tests
-          filters:
-            branches:
-              only: develop
+            - integration_tests
+            - security_tests
 
       - deploy_int:
           requires:
-            - unit_tests
-          filters:
-            branches:
-              only: integration
+            - integration_tests
+            - security_tests
 
       - deploy_prod:
           requires:
