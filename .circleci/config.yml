@@ -111,7 +111,7 @@ workflows:
 
       - deploy_prod:
           requires:
-            - deploy_devs
+            - deploy_dev
           filters:
             branches:
               only: master
