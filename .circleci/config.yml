@@ -1,38 +1,41 @@
 version: 2.1
+
 orbs:
   node: circleci/node@5
-jobs:
 
+executors:
+  default:
+    docker:
+      - image: circleci:node:16
+
+jobs:
   build:
-    executor: node/default
+    executor: default
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - pkg-manager: npm
+      - run:
+          name: Install dependencies
+          command: npm install
       - run:
           name: Code Linting
           command: npm run lint
       - run:
           name: Build Project
           command: npm run build
-      - run :
+      - run:
           name: Package
           command: npm run package
 
-
   unit_tests:
-    executor: node/default
-    environment:
-      JEST_JUNIT_OUTPUT_DIR: ./test-results/
+    executor: default
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
       - run:
-          command: npm install jest-junit
+          name: Install dependencies
+          command: npm install
+      - run: npm install jest-junit
       - run:
-          name: Run tests
+          name: Run Unit Tests
           command: npm run test:ci
       - store_test_results:
           path: ./test-results/
@@ -41,13 +44,20 @@ jobs:
     executor: default
     steps:
       - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
       - run: npm run test:integration
 
   security_tests:
     executor: default
     steps:
       - checkout
-      - run: npm audit --audit-level-high
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run: npm audit --audit-level=high
+
 
   deploy_dev:
     executor: node/default
@@ -69,21 +79,21 @@ jobs:
 
 workflows:
   version: 2
-  ci_pipeline:
+  build-test-deploy:
     jobs:
       - build:
         filters:
           branches:
             ignore:
-              - /^hotfix\/.*/
-              - /^feature\/.*/
+                  - /^hotfix\/.*/
+                  - /^feature\/.*/
       - unit_tests:
           requires:
             - build
 
       - integration_tests:
           requires:
-            - build
+            - unit_tests
 
       - security_tests:
           required:
@@ -91,6 +101,8 @@ workflows:
 
       - deploy_dev:
           requires:
+            - integration_tests
+            - security_tests
             - unit_tests
           filters:
             branches:
@@ -108,7 +120,8 @@ workflows:
 
       - deploy_prod:
           requires:
-            - unit_tests
+            - deploy_int
+            - deploy_dev
           filters:
             branches:
               only:
