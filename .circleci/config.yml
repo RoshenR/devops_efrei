@@ -69,7 +69,7 @@ jobs:
 
 workflows:
   version: 2
-  build-test-deploy:
+  ci_pipeline:
     jobs:
       - build:
         filters:
