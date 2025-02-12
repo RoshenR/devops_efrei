@@ -1,11 +1,15 @@
-# .circleci/config.yml
-
 version: 2.1
 orbs:
   node: circleci/node@5
 jobs:
-  test-node:
-    # Install node dependencies and run tests
+  # First job declared is for building things..
+  build:
+    executor: node/default
+    steps:
+      - checkout
+      - run: echo "Building things..."
+  # Second job declared is for launching unit tests with Jest
+  unit-tests:
     executor: node/default
     environment:
       JEST_JUNIT_OUTPUT_DIR: ./test-results/
@@ -20,7 +24,23 @@ jobs:
           command: npm run test:ci
       - store_test_results:
           path: ./test-results/
+
+  deploy_dev:
+    executor: node/default
+    steps:
+      - checkout
+      - run: echo "Deploying to development environment..."
+
+  deploy_prod:
+    executor: node/default
+    steps:
+      - checkout
+      - run: echo "Deploying to production environment..."
+
 workflows:
-  build-and-test:
+  version: 2
+  build-test-deploy:
+
     jobs:
-      - test-node
+
+      - build
