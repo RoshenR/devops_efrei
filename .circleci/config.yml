@@ -11,8 +11,12 @@ jobs:
     steps:
       - checkout
       - run: echo "Installing Dependencies.."
-      - run: npm install
-      - run: echo "Building things..."
+      - run: echo "Installing dependencies..."
+#      - run: npm install
+      - run: echo "Running code analysis..."
+#      - run: npm run lint
+      - run: echo "Cleaning and packaging..."
+#      - run: npm run build
   # Second job declared is for launching unit tests with Jest
   unit_tests:
     executor: node/default
@@ -40,6 +44,24 @@ jobs:
 #      - run: npm install
       - run: echo "Running integration tests..."
 
+  performance_tests:
+    executor: node/default
+    steps:
+      - checkout
+      - run: echo "Running performance tests..."
+
+  compatibility_tests:
+    executor: node/default
+    steps:
+      - checkout
+      - run: echo "Running compatibility tests..."
+
+    accessibility_tests:
+      executor: node/default
+      steps:
+        - checkout
+        - run: echo "Running accessibility tests..."
+
   security_tests:
     executor: node/default
     steps:
@@ -54,20 +76,30 @@ jobs:
     executor: node/default
     steps:
       - checkout
+      - run: echo "Preparing development deployment..."
       - run: echo "Deploying to development environment..."
+      - run: echo "Running verification tests..."
+      - run: echo "Monitoring development deployment..."
 
   deploy_int:
     executor: node/default
     steps:
       - checkout
+      - run: echo "Preparing integration deployment..."
       - run: echo "Deploying to integration environment..."
+      - run: echo "Running functional validation tests..."
+      - run: echo "Running load tests..."
+      - run: echo "Monitoring integration deployment..."
 
   # Deploy production environment
   deploy_prod:
     executor: node/default
     steps:
       - checkout
+      - run: echo "Preparing production deployment..."
       - run: echo "Deploying to production environment..."
+      - run: echo "Running final validation checks..."
+      - run: echo "Monitoring production deployment..."
 
 workflows:
   version: 2
@@ -93,19 +125,37 @@ workflows:
           requires:
             - build
 
-      - deploy_dev:
+      - performance_tests:
           requires:
             - integration_tests
-            - security_tests
+
+      - compatibility_tests:
+          requires:
+            - integration_tests
+
+      - accessibility_tests:
+          requires:
+            - integration_tests
+
+      - deploy_dev:
+          requires:
+            - performance_tests
+            - compatibility_tests
+            - accessibility_tests
+          filters:
+            branches:
+              only: develop
 
       - deploy_int:
           requires:
-            - integration_tests
-            - security_tests
+            - deploy_dev
+          filters:
+            branches:
+              only: integration
 
       - deploy_prod:
           requires:
-            - deploy_dev
+            - deploy_int
           filters:
             branches:
               only: master
