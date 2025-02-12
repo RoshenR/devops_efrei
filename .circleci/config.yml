@@ -45,13 +45,13 @@ workflows:
 
       - build
 
-      - unit-tests:
+      - unit_tests:
           requires:
             - build
 
       - deploy_dev:
           requires:
-            - unit-tests
+            - unit_tests
           filters:
             branches:
               only:
