@@ -19,9 +19,6 @@ export default function Calculator() {
         }
         switch (operator) {
             case '+': setResult(numA + numB); break;
-            case '-': setResult(numA - numB); break;
-            case '*': setResult(numA * numB); break;
-            case '/': setResult(numA / numB); break;
             default: setResult("Opérateur non supporté");
         }
     }
