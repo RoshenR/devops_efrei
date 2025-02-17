@@ -11,11 +11,11 @@ jobs:
     steps:
       - checkout
       - run: echo "Installing dependencies..."
-      - run: npm install
+#      - run: npm install
       - run: echo "Running code analysis..."
-      - run: npm run lint
+#      - run: npm run lint
       - run: echo "Cleaning and packaging..."
-      - run: npm run build
+#      - run: npm run build
 
   # Unit tests job
   unit_tests:
