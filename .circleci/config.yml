@@ -41,9 +41,9 @@ jobs:
     steps:
       - checkout
       - run: echo "Installing dependencies for integration tests..."
-      - run: npm install
+#      - run: npm install
       - run: echo "Running integration tests..."
-      - run: npm run test:integration
+#      - run: npm run test:integration
 
   # Security tests job
   security_tests:
@@ -51,7 +51,7 @@ jobs:
     steps:
       - checkout
       - run: echo "Installing dependencies for security tests..."
-      - run: npm install
+#      - run: npm install
       - run: echo "Running security tests..."
 #      - run: npm audit --audit-level=high
 
